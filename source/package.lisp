@@ -1,4 +1,4 @@
-(defpackage crypto
+(defpackage cl-crypto
   (:use common-lisp)
   (:export
    ;; AES interface
