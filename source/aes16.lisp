@@ -823,7 +823,8 @@ inverse algorithm"
 
 
 (defun aes-decrypt (keys in &key (out (make-array 16 :element-type '(unsigned-byte 8))))
-  (declare (optimize (speed 3) (safety 0)))
+  (declare (optimize (speed 3) (safety 0))
+	   (type (simple-array uint-8) in out))	   
   (let ((round-keys (reverse-key-of keys)))
     (declare (type (simple-array uint-16) round-keys))
     (let ((w0-hi 0) (w1-hi 0) (w2-hi 0) (w3-hi 0)
