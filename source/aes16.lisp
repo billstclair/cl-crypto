@@ -34,10 +34,17 @@
 ;;; efficient on non-SBCL 32-bit systems where bignums are often
 ;;; required when dealing with 32-bit Rijndael field operations.
 ;;;
+;;; NOTE: using constants for AES tables because this is one case where
+;;; we really want Lisp to enforce read-only state on the values.  And
+;;; using the define-constant macro to get around SBCL's special treatment
+;;; of constants, as per the SBCL manual and Vestgaarden's code. 
+;;;
 ;;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 ;;;
 ;;;  13 AUG 2010 File created.  (mrbug)
 ;;;              TODO: some macro cleanup, packaging, etc.
+;;;
+;;;  14 AUG 2010 Removed all inlines, converted to macros (mrbug)
 ;;;
 ;;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
@@ -53,9 +60,7 @@
 	       +ft0+ +ft1+ +ft2+ +ft3+
 	       +rt0+ +rt1+ +rt2+ +rt3+)
 	 (type (simple-array)
-	       +kt0+ +kt1+ +kt2+ +kt3+)
-	 (inline make-bytes-from-uint-16
-		 make-uint-16))
+	       +kt0+ +kt1+ +kt2+ +kt3+))
 
 
 ;;;
@@ -433,28 +438,16 @@ inverse algorithm"
 ;;;
 
 
-(declaim (ftype (function (uint-16) uint-8) sub-uint-16))
-(defun sub-uint-16 (w)
-  (declare (optimize (speed 3) (safety 0))
-	   (type uint-16 w))
-  (the uint-16
-    (make-uint-16 (aref +fsb+ (ldb (byte 8 8) w))
-		  (aref +fsb+ (logand #xFF w)))))
+(defmacro make-uint-16 (b1 b0)
+  ;; A macro to avoid varying treatment of inline across Lisps
+  `(@logxor (ash ,b1 8) ,b0))
 
-(declaim (ftype (function (uint-16 (simple-array uint-8) fixnum)) make-byte-from-uint-16))
-(defun make-bytes-from-uint-16 (w byte-array offset)
-  (declare (optimize (speed 3) (safety 0))
-	   (type uint-16 w)
-	   (type (simple-array uint-8) byte-array))
-  (setf (@aref uint-8 byte-array offset) (ldb (byte 8 8) w))
-  (setf (@aref uint-8 byte-array (1+ offset)) (ldb (byte 8 0) w)))
-
-(declaim (ftype (function (uint-8 uint-8) uint-16) make-uint-16))
-(defun make-uint-16 (b1 b0)
-  (declare (optimize (speed 3) (safety 0))
-	   (type uint-8 b1 b0))
-    (@logxor (ash b1 8) b0))
-
+(defmacro make-bytes-from-uint-16 (w array offset)
+  ;; A macro to avoid varying treatment of inline across Lisps
+  `(progn
+     (setf (@aref uint-8 ,array ,offset) (ldb (byte 8 8) ,w))
+     (setf (@aref uint-8 ,array (1+ ,offset)) (ldb (byte 8 0) ,w))))
+     
 (defmacro make-uint-16-from-byte-array (array offset)
   "Combine adjacent bytes at offset into a uint-16"
   ;;This is a macro to avoid run-time index arithmetic
