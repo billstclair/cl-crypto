@@ -413,15 +413,8 @@ inverse algorithm"
 		(aref +fsb+ (ldb (byte 8 8) w))
 		(aref +fsb+ (logand #xFF w))))
 
-(defun rotate-uint-32-left (word)
-  ;; can't guaranteed not bignum on 32-bit CCL
-  ;; (declare (type uint-32 word))
-  (logxor
-   (ldb (byte 8 24) word)
-   (ash (logand #xFFFFFF word) 8)))
-
 (defun make-uint-32-from-byte-array (byte-array offset)
-  ;; can't guaranteed not bignum on 32-bit CCL
+  ;; can't guarantee not bignum on 32-bit CCL
   ;; (declare (optimize (speed 3) (safety 0))
   ;; 	   (type fixnum offset)
   ;; 	   (type (simple-array uint-8) byte-array))
@@ -491,7 +484,7 @@ inverse algorithm"
 	    (logxor (aref fkey (- i num-words))
   		    (cond ((zerop (mod i num-words))
   			   (logxor (nth (1- (/ i num-words)) +rcon+)
-  				   (sub-uint-32 (rotate-uint-32-left
+  				   (sub-uint-32 (rot-uint-32-L
   					      (aref fkey (1- i))))))
   			  ((and (> num-words 6)
   				(= 4 (mod i num-words)))
@@ -531,8 +524,6 @@ inverse algorithm"
 
 (defmacro aes-last-round-step (sb rkh rkl b0 b1 b2 b3 xh xl)
   `(progn
-     ;; (format t "~%rkh=~x rkl=~x b0=~x b1=~x b2=~x b3=~x~%"
-     ;; 	     ,rkh ,rkl ,b0 ,b1 ,b2 ,b3)
      (setq ,xh (@logxor ,rkh
 		       (@ash (aref ,sb ,b0) 8)
 		       (aref ,sb ,b1)))

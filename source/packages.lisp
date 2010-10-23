@@ -8,10 +8,13 @@
    #:aes-expand-key
    #:aes-encrypt
    #:aes-decrypt
-   ;; Tests
+   ;; AES Tests
    #:aes-self-test
    #:aes-get-speed
-   #:aes-get-avg-speed))
+   #:aes-get-avg-speed
+   ;; sha1.lisp
+   ))
+
 
 
   
