@@ -13,6 +13,14 @@
    #:aes-get-speed
    #:aes-get-avg-speed
    ;; sha1.lisp
+   ;; strings.lisp
+   #:sha1
+   #:generate-iv
+   #:iv-to-base64
+   #:base64-to-iv
+   #:aes-encrypt-string
+   #:aes-decrypt-to-string
+   #:aes-string-encryption-test
    ))
 
 

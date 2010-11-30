@@ -148,4 +148,19 @@
       (push (make-word-from-byte-array byte-array (* n 4)) words))
     (nreverse words)))
 
+(defparameter +linux-urandom-dev+ #P"/dev/urandom")
+(defvar *random-byte-stream* nil)
 
+(defmacro with-random-byte-stream (&body body)
+  (let ((thunk (gensym)))
+    `(flet ((,thunk () ,@body))
+       (declare (dynamic-extent #',thunk))
+       (call-with-random-byte-stream #',thunk))))
+
+(defun call-with-random-byte-stream (thunk)
+  (if *random-byte-stream*
+      (funcall thunk)
+      (with-open-file (*random-byte-stream*
+                       +linux-urandom-dev+
+                       :element-type '(unsigned-byte 8))
+        (funcall thunk))))

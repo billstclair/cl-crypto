@@ -98,7 +98,7 @@
 		   (aref (schedule-of state) (- i 16)))
 	   1))))
 		   
-(defun sha1-process-message (state m)
+(defun sha1-process-message (state m &optional verbose-p)
   (expand-schedule state m)
   (let ((a (aref (state-of state) 0))
 	(b (aref (state-of state) 1))
@@ -120,8 +120,9 @@
       (setq c (rot-uint-32-L b 30))
       (setq b a)
       (setq a tmp)
-      (format t "~%~2,'0d  ~8,'0X ~8,'0X ~8,'0X ~8,'0X ~8,'0X"
-	      i a b c d e))
+      (when verbose-p
+        (format t "~%~2,'0d  ~8,'0X ~8,'0X ~8,'0X ~8,'0X ~8,'0X"
+                i a b c d e)))
     
     (setq f 'parity)
     (setq rcon (second +sha1-rcons+))
@@ -137,8 +138,9 @@
       (setq c (rot-uint-32-L b 30))
       (setq b a)
       (setq a tmp)
-      (format t "~%~2,'0d  ~8,'0X ~8,'0X ~8,'0X ~8,'0X ~8,'0X"
-	      i a b c d e))
+      (when verbose-p
+        (format t "~%~2,'0d  ~8,'0X ~8,'0X ~8,'0X ~8,'0X ~8,'0X"
+                i a b c d e)))
 
     (setq f 'maj)
     (setq rcon (third +sha1-rcons+))
@@ -154,8 +156,9 @@
       (setq c (rot-uint-32-L b 30))
       (setq b a)
       (setq a tmp)
-      (format t "~%~2,'0d  ~8,'0X ~8,'0X ~8,'0X ~8,'0X ~8,'0X"
-	      i a b c d e))
+      (when verbose-p
+        (format t "~%~2,'0d  ~8,'0X ~8,'0X ~8,'0X ~8,'0X ~8,'0X"
+                i a b c d e)))
 
     (setq f 'parity)
     (setq rcon (fourth +sha1-rcons+))
@@ -171,8 +174,9 @@
       (setq c (rot-uint-32-L b 30))
       (setq b a)
       (setq a tmp)
-      (format t "~%~2,'0d  ~8,'0X ~8,'0X ~8,'0X ~8,'0X ~8,'0X"
-	      i a b c d e))
+      (when verbose-p
+        (format t "~%~2,'0d  ~8,'0X ~8,'0X ~8,'0X ~8,'0X ~8,'0X"
+                i a b c d e)))
     (setf (aref (state-of state) 0)
 	  (logand #xFFFFFFFF (+ (aref (state-of state) 0) a))
 	  (aref (state-of state) 1)

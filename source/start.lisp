@@ -5,7 +5,10 @@
 		  "types"
 		  "macros"
 		  "aes16"
-		  "sha1"))
+		  "sha1"
+                  ;; Need cl-base64 & flexi-streams for this file
+                  ;;"strings"
+                  ))
     (load file)))
 
 (load-cl-crypto-files)
