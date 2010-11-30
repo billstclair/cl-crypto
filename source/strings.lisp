@@ -1,5 +1,6 @@
 ;;;
 ;;; High-level string-based functions
+;;; Author: Bill St. Clair
 ;;;
 
 (in-package :cl-crypto)
