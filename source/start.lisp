@@ -3,7 +3,7 @@
 (defun load-cl-crypto-files ()
   (dolist (file '("packages"
 		  "types"
-		  "macros"
+		  "utility"
 		  "aes16"
 		  "sha1"))
     (load file)))
