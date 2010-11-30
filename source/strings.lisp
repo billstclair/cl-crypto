@@ -125,6 +125,9 @@
 (defun passphrase-to-aes-key (passphrase &optional (bits 128))
   (check-type bits (member 128 192 256))
   (cond ((typep passphrase 'aes-key) passphrase)
+        ((typep passphrase '(array uint-8))
+         (assert (member (length passphrase) '(16 24 32)))
+         (aes-expand-key passphrase))
         (t (let* ((bytes (/ bits 8))
                   (res (make-array bytes :element-type 'uint-8))
                   (len (length passphrase))
@@ -228,7 +231,7 @@
           nil
           "Unknown blocking method, only :cbc supported: ~s" blocking-method)
   (when (stringp iv)
-    (setf iv (cl-base64:base64-string-to-usb8-array string)))
+    (setf iv (cl-base64:base64-string-to-usb8-array iv)))
   (assert (equal (length iv) 16))
   (let* ((in (make-array 16 :element-type 'uint-8))
          (out (make-array 16 :element-type 'uint-8))

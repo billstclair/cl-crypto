@@ -18,6 +18,7 @@
    #:generate-iv
    #:iv-to-base64
    #:base64-to-iv
+   #:passphrase-to-aes-key
    #:aes-encrypt-string
    #:aes-decrypt-to-string
    #:aes-string-encryption-test
