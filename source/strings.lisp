@@ -186,6 +186,7 @@
           (incf k))
         (setf j 0)))
     (when (and (eql j 0)
+               (> k 0)
                (member (aref octets (1- k)) '(#x80 0)))
       ;; May need an extra block to distinguish final byte of #x80 or 0
       (unless (and (eql 0 (aref octets (1- k)))
@@ -205,7 +206,8 @@
            (when (eql j 16) (return))
            (setf (aref in j)
                  (if pad (logxor pad (aref iv-buf j)) (aref iv-buf j))
-                 pad nil)))
+                 pad nil)
+           (incf j)))
       (aes-encrypt keys in :out out)
       (dotimes (j 16)
         (setf (aref res k) (aref out j))
@@ -213,7 +215,7 @@
     (values
      (if columns
          (cl-base64:usb8-array-to-base64-string res :columns columns)
-         res)
+         (copy-seq res))
      iv)))
 
 (defun aes-decrypt-to-string (string passphrase &key
@@ -262,7 +264,7 @@
     (flexi-streams:octets-to-string res :external-format :utf-8 :end size)))
 
 (defun aes-string-encryption-test ()
-  (let ((string "four score and seven years ago our forefathers set forth on this continent a new republic, conceived in liberty and dedicated to the proposition that all men are created equal.")
+  (let ((string "Four score and seven years ago our forefathers set forth on this continent a new republic, conceived in liberty and dedicated to the proposition that all men are created equal. ")
         (passphrase "A really secret password. Really."))
     (dotimes (i 10)
       (multiple-value-bind (cipher iv)
