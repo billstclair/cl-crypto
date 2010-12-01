@@ -99,13 +99,13 @@
 		   (aref (schedule-of state) (- i 16)))
 	   1))))
 
-(defun sha1-process-message (state m)
+(defun sha1-process-message (state m &optional verbose-p)
   (sha1-pad-message state m)
   (sha1-expand-schedule state m)
   (dotimes (i (num-rounds-of state))
-    (sha1-process-round state)))
+    (sha1-process-round state verbose-p)))
 
-(defun sha1-process-round (state)  
+(defun sha1-process-round (state &optional verbose-p)
   (destructuring-bind (a b c d e) (state-of state)
     (let ((chunk-num 0) (tmp 0))
       (flet ((foo (fn rcon)
@@ -122,8 +122,10 @@
 		       c (rot-uint-32-L b 30)
 		       b a
 		       a tmp)
-		 (format t "~%~2,'0d:~2,'0d  ~8,'0X ~8,'0X ~8,'0X ~8,'0X ~8,'0X"
-			 chunk-num i a b c d e))))
+                 (when verbose-p
+                   (format
+                    t "~%~2,'0d:~2,'0d  ~8,'0X ~8,'0X ~8,'0X ~8,'0X ~8,'0X"
+                    chunk-num i a b c d e)))))
 	(declare (dynamic-extent #'foo))
 	(map nil #'foo '(ch parity maj parity) +sha1-rcons+))
       (setf (state-of state)
