@@ -7,8 +7,6 @@
 ;;;; **************************************************************************
 ;;;; **************************************************************************
 ;;;
-;;; Written by: mrbug@rayservers.net
-;;;
 ;;; This is a version of the AES (Rijndael) encryption algorithm coded
 ;;; in pure Common Lisp, and restructured to use 16-bit fixnum arithmetic
 ;;; in order to avoid bignums for 32-bit quantities using more than 29 bits
@@ -41,12 +39,12 @@
 ;;;
 ;;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 ;;;
-;;;  13 AUG 2010 File created.  (mrbug)
+;;;  13 AUG 2010 File created. 
 ;;;              TODO: some macro cleanup, packaging, etc.
 ;;;
-;;;  14 AUG 2010 Removed all inlines, converted to macros (mrbug)
+;;;  14 AUG 2010 Removed all inlines, converted to macros 
 ;;;
-;;;  18 OCT 2010 Moved some macros to macros.lisp (mrbug)
+;;;  18 OCT 2010 Moved some macros to macros.lisp 
 ;;;
 ;;; * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
@@ -857,3 +855,21 @@ hex string must be mulitple of 2"
 		  (format t "~&AES test fail for ~A~%" x))
 		ok?))
 	    data)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Copyright 2010 TSC AG, Postfach 73, CH 6314 Unterageri, Switzerland
+;;;
+;;; Licensed under the Apache License, Version 2.0 (the "License");
+;;; you may not use this file except in compliance with the License.
+;;; You may obtain a copy of the License at
+;;;
+;;;     http://www.apache.org/licenses/LICENSE-2.0
+;;;
+;;; Unless required by applicable law or agreed to in writing, software
+;;; distributed under the License is distributed on an "AS IS" BASIS,
+;;; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+;;; See the License for the specific language governing permissions
+;;; and limitations under the License.
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -1,18 +1,22 @@
-(in-package :cl-user)
+; -*- mode: lisp -*-
+(in-package #:cl-user)
 
-(defun load-cl-crypto-files ()
-  (dolist (file '("packages"
-		  "types"
-		  "utility"
-		  "aes16"
-		  "sha1"
-                  ;; Need cl-base64 & flexi-streams for this file
-                  ;;"strings"
-                  ))
-    (load file)))
-
-(load-cl-crypto-files)
-(use-package :cl-crypto)
+(asdf:defsystem :cl-crypto
+  :description "Pure Lisp Cryptography"
+  :author "Mr. Bug <mrbug@rayservers.net>"
+  :version "0.1"
+  :license "Apache"
+  :depends-on (cl-base64 flexi-streams)
+  :components
+  ((:module source
+    :serial t
+    :components
+    ((:file "packages")
+     (:file "types")
+     (:file "macros")
+     (:file "aes16")
+     (:file "sha1")
+     (:file "strings")))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
