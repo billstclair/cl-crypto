@@ -148,11 +148,14 @@
                            (bits 128)
                            (blocking-method :cbc)
                            (iv (generate-iv))
+                           keys
                            (columns 0))
   "Encrypt STRING to the given PASSPHRASE, using AES of the given number of BITS.
    BITS can be 128, 192, or 256.
    BLOCKING-METHOD can be :CBC, the default.
    IV is an initial vector, which will be generated if not passed.
+   If KEYS is included, it should be an AES-KEY instance as returned by
+     PASSPHRASE-TO-AES-KEY or AES-EXPAND-KEY. It will be used instead of PASSPHRASE.
    COLUMNS is the number of columns for the resulting base64 string.
    COLUMNS defaults to 0, adds no newlines to the base64 string.
    If COLUMNS is passes as NIL, returns a uint-8 array instead of converting to base64.
@@ -171,7 +174,7 @@
          (blocks (ceiling size 16))
          (total-bytes (* blocks 16))
          (res (make-array total-bytes :element-type 'uint-8))
-         (keys (passphrase-to-aes-key passphrase bits))
+         (keys (or keys (passphrase-to-aes-key passphrase bits)))
          (iv-buf (copy-seq iv))
          (j 0)
          (k 0))
@@ -222,7 +225,16 @@
 (defun aes-decrypt-to-string (string passphrase &key
                               (bits 128)
                               (blocking-method :cbc)
-                              iv)
+                              iv
+                              keys)
+  "Decrypt AES-ENCRYPT-TO-STRING result with the PASSPHRASE, using AES of the
+     given number of BITS.
+   BITS can be 128, 192, or 256.
+   BLOCKING-METHOD can be :CBC, the default.
+   IV must be the same initial vector returned as the second value of
+     AES-ENCRYPT-TO-STRING.
+   If KEYS is included, it should be an AES-KEY instance as returned by
+     PASSPHRASE-TO-AES-KEY or AES-EXPAND-KEY. It will be used instead of PASSPHRASE."
   (check-type bits (member 128 192 256))
   (assert (eq blocking-method :cbc)
           nil
@@ -239,7 +251,7 @@
                        string)))
          (size (length octets))
          (res (make-array size :element-type 'uint-8))
-         (keys (passphrase-to-aes-key passphrase bits))
+         (keys (or keys (passphrase-to-aes-key passphrase bits)))
          (iv-buf (copy-seq iv))
          (j 0)
          (k 0))
