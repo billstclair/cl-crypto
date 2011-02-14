@@ -85,6 +85,7 @@
 			    :element-type 'uint-32)))
 
 (defun sha1-pad-message (state m)
+  (declare (ignore m))
   (setf (num-rounds-of state) 1))
 
 (defun sha1-expand-schedule (state m)
