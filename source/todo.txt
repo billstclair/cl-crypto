@@ -1,9 +1,9 @@
-SHA-1
+RANDOM - improved performance
 
-RSA geygen
+AES32 for SBCL and 64-bit implementations
 
-RSA public encrypt
-RSA private decrypt
+SHA256
+
 RSA sign/verify
 
 PGP stuff
