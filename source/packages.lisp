@@ -3,7 +3,14 @@
 (defpackage cl-crypto
   (:use common-lisp)
   (:export
-   ;;; aes16.lisp
+   ;; rsa.lisp
+   ;; RSA interface
+   #:rsa-gen
+   #:rsa-encrypt
+   #:rsa-decrypt
+   ;; RSA tests
+   #:rsa-self-test
+   ;; aes16.lisp
    ;; AES interface
    #:aes-expand-key
    #:aes-encrypt

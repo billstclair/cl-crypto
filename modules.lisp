@@ -20,7 +20,15 @@
     (:files "packages"
             "types"
             "utility"
+	    "math"
+	    "random"
+	    "small-primes"
+	    "prime"
+	    "rsa"
+	    "rsa-padding"
             "aes16"
             "sha1"
             "strings"
 	    )))
+
+

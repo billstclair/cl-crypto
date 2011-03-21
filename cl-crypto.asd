@@ -1,4 +1,5 @@
-; -*- mode: lisp -*-
+;;;; -*- mode: lisp -*-
+
 (in-package #:cl-user)
 
 (asdf:defsystem :cl-crypto
@@ -14,6 +15,12 @@
     ((:file "packages")
      (:file "types")
      (:file "utility")
+     (:file "math")
+     (:file "random")
+     (:file "small-primes")
+     (:file "prime")
+     (:file "rsa")
+     (:file "rsa-padding")x
      (:file "aes16")
      (:file "sha1")
      (:file "strings")))))
