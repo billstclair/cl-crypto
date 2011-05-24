@@ -29,6 +29,12 @@
    #:aes-encrypt-string
    #:aes-decrypt-to-string
    #:aes-string-encryption-test
+   ;;random.lisp
+   #:with-random-byte-stream
+   #:random-integer
+   #:random-string
+   #:get-ranged-random-num
+   #:get-random-bits
    ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
