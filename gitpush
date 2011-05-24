@@ -1,0 +1,12 @@
+#!/bin/bash
+
+#git remote add origin /home/lisp/git/cl-crypto.git
+#git remote add ok ok.acotilo.com:/home/lisp/git/cl-crypto.git
+
+# get the current branch, "git branch --contains" outputs "* branch"
+branch=`git branch --contains`
+branch=${branch:2}
+
+echo "Pushing $branch"
+git push origin $branch
+git push ok $branch
