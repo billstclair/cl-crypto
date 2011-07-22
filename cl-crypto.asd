@@ -20,7 +20,7 @@
      (:file "small-primes")
      (:file "prime")
      (:file "rsa")
-     (:file "rsa-padding")x
+     (:file "rsa-padding")
      (:file "aes16")
      (:file "sha1")
      (:file "strings")))))
