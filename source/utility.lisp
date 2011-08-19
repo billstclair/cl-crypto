@@ -83,6 +83,10 @@
 	      :initial-contents
 	      str))
 
+(defun string->octets (string)
+  (flexi-streams:string-to-octets
+   string :external-format :utf-8))
+
 (defun print-hex (x)
   (format t "~X " x))
 
@@ -140,7 +144,57 @@
   (make-bytes w2 byte-array 8)
   (make-bytes w3 byte-array 12)
   byte-array)
-              
+
+(defun hex-string-to-byte-vector (string)
+  (labels ((digit (x)
+             (let ((code (char-code x)))
+               (declare (type fixnum code))
+               (cond ((and (<= code 57) (>= code 48))
+                      (the fixnum (- code 48)))
+                     ((and (>= code 97) (<= code 102))
+                      (the fixnum (- code 87)))
+                     ((and (<= code 70) (>= code 65))
+                      (the fixnum (- code 55)))
+                     (t (error "not a hexadecimal digit")))))
+           (hex (a b)
+             (+ (ash (digit a) 4) (digit b))))
+    (let* ((len (floor (length string) 2))
+           (vec (make-array len :element-type 'uint-8)))
+      (dotimes (i len)
+        (let ((tmp (* 2 i)))
+          (setf (aref vec i)
+                (hex (aref string tmp)
+                     (aref string (1+ tmp))))))
+      vec)))
+
+(defun hex-vector-from-word-list (words)
+  (let ((arr (make-array (* 4 (length words))
+                         :element-type 'uint-8
+                         :fill-pointer 0)))
+    (dolist (x words)
+      (let ((tmp (make-array 4 :element-type 'uint-8)))
+        (make-bytes x tmp 0)
+        (dotimes (n 4)
+          (vector-push (aref tmp n) arr))))
+    arr))
+
+(defun hex-string-from-word-list (words)
+  (flet ((hex-char (x)
+           (code-char
+            (+ (if (< x 10)
+                   #.(char-code #\0)
+                   #.(- (char-code #\a) 10))
+               x))))
+    (with-output-to-string (str)
+      (dolist (x words)
+        (let ((arr (make-array 4 :element-type 'uint-8)))
+          (make-bytes x arr 0)
+          (dotimes (n 4)
+            (let* ((elt (aref arr n))
+                   (first (ldb (byte 4 4) elt))
+                   (second (ldb (byte 4 0) elt)))
+            (write-char (hex-char first) str)
+            (write-char (hex-char second)str))))))))
 
 (defun byte-array-to-word-list (byte-array)
   (let ((num-words (/ (array-total-size byte-array) 4))
@@ -148,6 +202,48 @@
     (dotimes (n num-words)
       (push (make-word-from-byte-array byte-array (* n 4)) words))
     (nreverse words)))
+
+(defun byte-array-to-word-vector (byte-array)
+  (declare (optimize (speed 3) (safety 0)))
+  (let ((len (length byte-array)))
+    (labels ((zaref (array offset)
+               (if (< offset len)
+                   (aref array offset) 0))
+             (pull-word (bytes offset)
+               (declare (type fixnum offset)
+                        (type (vector uint-8) bytes))
+               (the (unsigned-byte 32)
+                 (make-word (zaref bytes offset)
+                            (zaref bytes (+ offset 1))
+                            (zaref bytes (+ offset 2))
+                            (zaref bytes (+ offset 3))))))
+      (let* ((num-words (ceiling (array-total-size byte-array) 4))
+             (words (make-array num-words
+                                :element-type 'uint-32
+                                :fill-pointer 0)))
+        (dotimes (n num-words)
+          (vector-push (pull-word byte-array (* n 4))
+                       words))
+        words))))
+
+(defun ensure-words (thing)
+  "Return a word vector and an octet length if applicable."
+  (etypecase thing
+    (string
+     (let ((octets (string->octets thing)))
+       (values (byte-array-to-word-vector octets)
+             (length octets))))
+    ((vector uint-8 *)
+     (values (byte-array-to-word-vector thing)
+             (length thing)))
+    ((vector uint-32 *) thing)))
+
+(defun word-vector-to-byte-array (words)
+  (let* ((len (length words))
+         (bytes (make-array (* len 4) :element-type 'uint-8)))
+    (dotimes (n len)
+      (make-bytes (aref words n) bytes (* n 4)))
+    bytes))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

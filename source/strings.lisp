@@ -1,108 +1,145 @@
-;;;
+;;; =============================================================
 ;;; High-level string-based functions
 ;;; Author: Bill St. Clair
-;;;
+;;; =============================================================
+;;; Notes:
+;;; ---
+;;; Eric O'Connor, 8/18/2011
+;;;   Added an explicit preprocessor
+;;;   Uses 32 bit integers
+;;;   Added hmac-sha1 & pbkdf2
+;;; =============================================================
 
 (in-package :cl-crypto)
 
-(defun sha1 (string &optional (res-type :hex))
+(defun make-preprocessor (words &key (blocks 0) byte-length)
+  (let ((pos 0) (len (length words))
+        (state :begin))
+    (lambda (&aux (m (make-array 16
+                                 :element-type 'uint-32
+                                 :fill-pointer 0)))
+      (unless (eq state :done)
+        (dotimes (i (min 16 (- len pos)))
+          (vector-push (aref words (+ pos i)) m))
+        (when (< (length m) 16)
+          (when (eq state :begin)
+            (let ((byte-pos
+                   (and byte-length (- (* len 4) byte-length)))
+                  (cur (1- (length m))))
+              (if (and byte-pos (plusp byte-pos))
+                  (setf (aref m cur)
+                        (logior (aref m cur) (ash 1 (1- (* byte-pos 8)))))
+                  (vector-push #x80000000 m)))
+            (setf state :pad))
+          (let ((c (length m)))
+            (dotimes (i (- 16 (length m)))
+              (vector-push 0 m))
+            (when (<= c 14)
+              (setf state :done)
+              (let ((blen (+ (or (and byte-length (* byte-length 8))
+                                 (* len 32))
+                             (* blocks 512))))
+                (setf (aref m 14) (ldb (byte 32 32) blen)
+                      (aref m 15) (ldb (byte 32 0) blen))))))
+        (incf pos 16)
+        m))))
+
+(defun return-state (state res-type)
+  (ecase res-type
+    (:words
+     (map '(vector uint-32) #'identity
+          state))
+    (:hex (hex-string-from-word-list state))
+    (:bytes (hex-vector-from-word-list state))
+    (:string
+     (let ((res (make-string 20))
+           (i 0))
+       (dolist (x state)
+         (setf (aref res i)
+               (code-char (ldb (byte 8 24) x))
+               (aref res (incf i))
+               (code-char (ldb (byte 8 16) x))
+               (aref res (incf i))
+               (code-char (ldb (byte 8 8) x))
+               (aref res (incf i))
+               (code-char (ldb (byte 8 0) x)))
+         (incf i))
+       res))))
+
+(defun sha1 (string &key (res-type :hex) initial-state (blocks 0)
+             byte-length)
   "Return the sha1 hash of STRING.
     Return a string of hex chars if res-type is :hex, the default,
     a byte-array if res-type is :bytes,
     or a string with 8-bit character values if res-type is :string."
-  (let* ((state (sha1-get-initial-state))
-         (m (make-array 16))
-         (octets (flexi-streams:string-to-octets string :external-format :utf-8))
-         (bytes (length octets))
-         (j 0)
-         (x 0)
-         (oc 4))
-    ;; Do the message bytes
-    (dotimes (i bytes)
-      (setf x (+ (ash x 8) (aref octets i)))
-      (when (eql 0 (decf oc))
-        (setf oc 4
-              (aref m j) x
-              x 0)
-        (when (eql 16 (incf j))
-          (setf j 0)
-          (sha1-process-message state m))))
-    ;; Add padding
-    (let ((pad #x80))
-      (dotimes (i oc)
-        (setf x (+ (ash x 8) pad)
-              pad 0))
-      (setf (aref m j) x)
-      (when (eql 16 (incf j))
-        (setf j 0)
-        (sha1-process-message state m))
-      (unless (eql pad 0)
-        (setf pad #x80000000))
+  (multiple-value-bind (octets length)
+      (ensure-words string)
+    (let ((state (or initial-state (sha1-get-initial-state)))
+          (preprocessor (make-preprocessor
+                         octets
+                         :blocks blocks
+                         :byte-length (or byte-length
+                                          length))))
       (loop
-         (when (eql j 15) (return))
-         (setf (aref m j) pad
-               pad 0)
-         (incf j))
-      ;; Add the message length
-      (setf (aref m 15) (* bytes 8))
-      (sha1-process-message state m))
-    (let ((state (state-of state)))
-      (ecase res-type
-        (:hex (let ((res (make-string 40))
-                    (i 0))
-                (flet ((hex-char (x)
-                         (code-char
-                          (+ (if (< x 10)
-                                 #.(char-code #\0)
-                                 #.(- (char-code #\a) 10))
-                             x))))
-                  (dolist (x state)
-                    (setf (aref res i)
-                          (hex-char (ldb (byte 4 28) x))
-                          (aref res (incf i))
-                          (hex-char (ldb (byte 4 24) x))
-                          (aref res (incf i))
-                          (hex-char (ldb (byte 4 20) x))
-                          (aref res (incf i))
-                          (hex-char (ldb (byte 4 16) x))
-                          (aref res (incf i))
-                          (hex-char (ldb (byte 4 12) x))
-                          (aref res (incf i))
-                          (hex-char (ldb (byte 4 8) x))
-                          (aref res (incf i))
-                          (hex-char (ldb (byte 4 4) x))
-                          (aref res (incf i))
-                          (hex-char (ldb (byte 4 0) x)))
-                    (incf i))
-                  res)))
-        (:bytes
-         (let ((res (make-array 20 :element-type 'uint-8))
-               (i 0))
-           (dolist (x state)
-             (setf (aref res i)
-                   (ldb (byte 8 24) x)
-                   (aref res (incf i))
-                   (ldb (byte 8 16) x)
-                   (aref res (incf i))
-                   (ldb (byte 8 8) x)
-                   (aref res (incf i))
-                   (ldb (byte 8 0) x))
-             (incf i))
-           res))
-        (:string
-         (let ((res (make-string 20))
-               (i 0))
-           (dolist (x state)
-             (setf (aref res i)
-                   (code-char (ldb (byte 8 24) x))
-                   (aref res (incf i))
-                   (code-char (ldb (byte 8 16) x))
-                   (aref res (incf i))
-                   (code-char (ldb (byte 8 8) x))
-                   (aref res (incf i))
-                   (code-char (ldb (byte 8 0) x)))
-             (incf i))
-           res))))))
+         for x = (funcall preprocessor)
+         while x do
+           (sha1-process-message state x))
+      (return-state (state-of state) res-type))))
+
+(defun hmac-sha1 (key string &key (res-type :hex)
+                  byte-length)
+  (let ((pad (make-array 16 :element-type 'uint-32))
+        (istate (sha1-get-initial-state))
+        (key-words (ensure-words key)))
+      (when (> (length key-words) 16)
+        (setf key-words (sha1 key-words
+                              :res-type :words)))
+      (dotimes (x 16)
+        (setf (aref pad x)
+              (if (< x (length key-words))
+                  (logxor (aref key-words x) #x36363636) #x36363636)))
+      (sha1-process-message istate pad)
+      (let ((hash (sha1 string
+                        :res-type :words
+                        :initial-state istate
+                        :blocks 1
+                        :byte-length byte-length))
+            (ostate (sha1-get-initial-state)))
+        (dotimes (x 16)
+          (setf (aref pad x)
+                (if (< x (length key-words))
+                    (logxor (aref key-words x) #x5c5c5c5c) #x5c5c5c5c)))
+        (sha1-process-message ostate pad)
+        (sha1 hash :res-type res-type :initial-state ostate
+              :blocks 1 :byte-length 20)))))
+  
+(defun pbkdf2 (password salt iter key-bytes)
+  (let ((pwords (ensure-words password)))
+    (multiple-value-bind (swords saltlen)
+        (ensure-words salt)
+      (let ((saltvec (make-array (1+ (length swords))
+                                  :element-type 'uint-32)))
+        (flet ((f (i)
+                 (setf (subseq saltvec 0 (length swords)) swords)
+                 (setf (aref saltvec (length swords)) i)
+                 (let* ((u (hmac-sha1 pwords saltvec
+                                      :res-type :words
+                                      :byte-length (+ 4 saltlen)))
+                        (last u))
+                   (dotimes (n (1- iter))
+                     (setf last (hmac-sha1 pwords last
+                                           :res-type :words))
+                     (dotimes (j 5)
+                       (setf (aref u j)
+                             (logxor (aref u j)
+                                     (aref last j)))))
+                   u)))
+          (let* ((keylen (ceiling key-bytes 20))
+                 (collect (make-array (* keylen 5)
+                                      :element-type 'uint-32)))
+            (dotimes (m keylen)
+              (setf (subseq collect (* m 5) (* (1+ m) 5)) (f (1+ m))))
+            (subseq collect 0 (ceiling key-bytes 4))))))))
 
 (defun generate-iv (&optional (num-bytes 16))
   "Generate an Initialization Vector array for block chaining"
