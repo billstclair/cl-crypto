@@ -68,12 +68,14 @@
 
 (defun sha1 (string &key (res-type :hex) initial-state (blocks 0)
              byte-length)
+  (declare (optimize (speed 3) (space 0)))
   "Return the sha1 hash of STRING.
     Return a string of hex chars if res-type is :hex, the default,
     a byte-array if res-type is :bytes,
     or a string with 8-bit character values if res-type is :string."
   (multiple-value-bind (octets length)
       (ensure-words string)
+    (declare (type (vector uint-32) octets))
     (let ((state (or initial-state (sha1-get-initial-state)))
           (preprocessor (make-preprocessor
                          octets
@@ -81,44 +83,52 @@
                          :byte-length (or byte-length
                                           length))))
       (loop
-         for x = (funcall preprocessor)
+         for x = (the (or (vector uint-32) null)
+                   (funcall preprocessor))
          while x do
            (sha1-process-message state x))
       (return-state (state-of state) res-type))))
 
 (defun hmac-sha1 (key string &key (res-type :hex)
                   byte-length)
+  (declare (optimize (speed 3) (space 0)))
   (let ((pad (make-array 16 :element-type 'uint-32))
         (istate (sha1-get-initial-state))
         (key-words (ensure-words key)))
-      (when (> (length key-words) 16)
-        (setf key-words (sha1 key-words
-                              :res-type :words)))
+    (declare (type (vector uint-32) key-words pad))
+    (when (> (length key-words) 16)
+      (setf key-words (sha1 key-words
+                            :res-type :words)))
+    (dotimes (x 16)
+      (setf (aref pad x)
+            (if (< x (length key-words))
+                (logxor (aref key-words x) #x36363636) #x36363636)))
+    (sha1-process-message istate pad)
+    (let ((hash (sha1 string
+                      :res-type :words
+                      :initial-state istate
+                      :blocks 1
+                      :byte-length byte-length))
+          (ostate (sha1-get-initial-state)))
+      (declare (type (vector uint-32) hash))
       (dotimes (x 16)
         (setf (aref pad x)
               (if (< x (length key-words))
-                  (logxor (aref key-words x) #x36363636) #x36363636)))
-      (sha1-process-message istate pad)
-      (let ((hash (sha1 string
-                        :res-type :words
-                        :initial-state istate
-                        :blocks 1
-                        :byte-length byte-length))
-            (ostate (sha1-get-initial-state)))
-        (dotimes (x 16)
-          (setf (aref pad x)
-                (if (< x (length key-words))
-                    (logxor (aref key-words x) #x5c5c5c5c) #x5c5c5c5c)))
-        (sha1-process-message ostate pad)
-        (sha1 hash :res-type res-type :initial-state ostate
-              :blocks 1 :byte-length 20)))))
-  
+                  (logxor (aref key-words x) #x5c5c5c5c) #x5c5c5c5c)))
+      (sha1-process-message ostate pad)
+      (sha1 hash :res-type res-type :initial-state ostate
+            :blocks 1 :byte-length 20))))
+
 (defun pbkdf2 (password salt iter key-bytes)
+  (declare (optimize (speed 3) (space 0)))
   (let ((pwords (ensure-words password)))
+    (declare (type (vector uint-32) pwords))
     (multiple-value-bind (swords saltlen)
         (ensure-words salt)
+      (declare (type (vector uint-32) swords))
       (let ((saltvec (make-array (1+ (length swords))
-                                  :element-type 'uint-32)))
+                                 :element-type 'uint-32)))
+        (declare (type (vector uint-32) saltvec))
         (flet ((f (i)
                  (setf (subseq saltvec 0 (length swords)) swords)
                  (setf (aref saltvec (length swords)) i)
@@ -126,6 +136,7 @@
                                       :res-type :words
                                       :byte-length (+ 4 saltlen)))
                         (last u))
+                   (declare (type (vector uint-32) u last))
                    (dotimes (n (1- iter))
                      (setf last (hmac-sha1 pwords last
                                            :res-type :words))
@@ -169,8 +180,8 @@
                   (str1 (subseq passphrase 0 half-len))
                   (str2 (and (< half-len len)
                                    (subseq passphrase half-len)))
-                  (hash1 (sha1 str1 :bytes))
-                  (hash2 (and str2 (sha1 str2 :bytes)))
+                  (hash1 (sha1 str1 :res-type :bytes))
+                  (hash2 (and str2 (sha1 str2 :res-type :bytes)))
                   (hashlen (length hash1))
                   (j 0))
              (dotimes (i bytes)
