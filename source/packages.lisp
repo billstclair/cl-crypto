@@ -5,36 +5,40 @@
   (:export
    ;; rsa.lisp
    ;; RSA interface
-   #:rsa-gen
-   #:rsa-encrypt
-   #:rsa-decrypt
+   rsa-gen
+   rsa-encrypt
+   rsa-decrypt
    ;; RSA tests
-   #:rsa-self-test
+   rsa-self-test
    ;; aes16.lisp
    ;; AES interface
-   #:aes-expand-key
-   #:aes-encrypt
-   #:aes-decrypt
+   aes-expand-key
+   aes-encrypt
+   aes-decrypt
    ;; AES Tests
-   #:aes-self-test
-   #:aes-get-speed
-   #:aes-get-avg-speed
+   aes-self-test
+   aes-get-speed
+   aes-get-avg-speed
    ;; sha1.lisp
    ;; strings.lisp
-   #:sha1
-   #:generate-iv
-   #:iv-to-base64
-   #:base64-to-iv
-   #:passphrase-to-aes-key
-   #:aes-encrypt-string
-   #:aes-decrypt-to-string
-   #:aes-string-encryption-test
+   sha1
+   hmac-sha1
+   pbkdf2
+   generate-iv
+   iv-to-base64
+   base64-to-iv
+   passphrase-to-aes-key
+   aes-encrypt-string
+   aes-decrypt-to-string
+   aes-string-encryption-test
+   ;;utility.lisp
+   hex-string-from-word-list
    ;;random.lisp
-   #:with-random-byte-stream
-   #:random-integer
-   #:random-string
-   #:get-ranged-random-num
-   #:get-random-bits
+   with-random-byte-stream
+   random-integer
+   random-string
+   get-ranged-random-num
+   get-random-bits
    ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
