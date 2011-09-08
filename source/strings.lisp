@@ -228,13 +228,13 @@
                               iv
                               keys)
   "Decrypt AES-ENCRYPT-TO-STRING result with the PASSPHRASE, using AES of the
-     given number of BITS.
-   BITS can be 128, 192, or 256.
-   BLOCKING-METHOD can be :CBC, the default.
-   IV must be the same initial vector returned as the second value of
-     AES-ENCRYPT-TO-STRING.
-   If KEYS is included, it should be an AES-KEY instance as returned by
-     PASSPHRASE-TO-AES-KEY or AES-EXPAND-KEY. It will be used instead of PASSPHRASE."
+      given number of BITS.
+    BITS can be 128, 192, or 256.
+    BLOCKING-METHOD can be :CBC, the default.
+    IV must be the same initial vector returned as the second value of
+      AES-ENCRYPT-TO-STRING.
+    If KEYS is included, it should be an AES-KEY instance as returned by
+      PASSPHRASE-TO-AES-KEY or AES-EXPAND-KEY. It will be used instead of PASSPHRASE."
   (check-type bits (member 128 192 256))
   (assert (eq blocking-method :cbc)
           nil
@@ -242,6 +242,8 @@
   (when (stringp iv)
     (setf iv (cl-base64:base64-string-to-usb8-array iv)))
   (assert (equal (length iv) 16))
+  (when (eql 0 (length string))
+    (return-from aes-decrypt-to-string ""))
   (let* ((in (make-array 16 :element-type 'uint-8))
          (out (make-array 16 :element-type 'uint-8))
          (octets (if (stringp string)
