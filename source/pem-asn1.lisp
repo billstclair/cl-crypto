@@ -6,6 +6,20 @@
   (format stream "-----BEGIN ~a-----~%~a~%-----END ~a-----~%"
 	  name data-string name))
 
+;;
+;; EXTREMELY incomplete alist of Object Identifiers (see X.690 section 8.19)
+;;
+(defparameter *oid-alist*
+  '(
+    ((1) . :iso)
+    ((1 2) . :member-body)
+    ((1 2 840) . :iso-us)
+    ((1 2 840 113549) . :rsa-dsi)
+    ((1 2 840 113549 1) . :pkcs)
+    ((1 2 840 113549 1 1) . :pkcs1)
+    ((1 2 840 113549 1 1 1) . :rsaEncryption)
+    ))
+
 (defparameter *asn1-class-alist*
   '((#x00 . :universal)
     (#x01 . :application)
@@ -178,8 +192,6 @@ data length, parse the data into a list of decoded integer values"
 	       
 
 
-
-
 (defun dump-bytes-from-stream (stream content-length)
   (let ((tmp-array (make-array content-length :element-type '(unsigned-byte 8))))
     (read-sequence tmp-array stream)
@@ -219,7 +231,12 @@ data length, parse the data into a list of decoded integer values"
 	       (when (eq p-or-c :primitive)
 		 (case tag
 		   (:object-identifier
-		    (format t "~%~a" (parse-object-identifier stream content-length)))
+		    (let ((oid (parse-object-identifier stream content-length)))
+		      (format t "~%~a"
+			      (aif
+			       (cdr (assoc oid *oid-alist* :test #'equal))
+			       it
+			       oid))))
 		   (:bit-string
 		    (dump-bytes-from-stream stream content-length))		       
 		   (t
@@ -230,23 +247,5 @@ data length, parse the data into a list of decoded integer values"
 	    
 	))))
 
-;; (defun test2 ()
-;;   (labels ((rec (x acc)
-;; 	     (multiple-value-bind (class p-or-c tag header-length content-length)
-;; 		 (get-header x)
-;; 	       (case p-or-c
-;; 		 (:primitive
-;; 		  (cons tag acc))
-;; 		 (:constructed
-;; 		  (rec
-		  
-		  
-;; 	       )))
-;;     (with-open-file (stream #P"~/tmp/pubkey.der"
-;; 			    :direction :input
-;; 			    :element-type '(unsigned-byte 8))
-;;       (let ((seq (make-array flen :element-type '(unsigned-byte 8))))
-;; 	(read-sequence seq stream)
-;; 	(rec seq nil)))))
     
   
