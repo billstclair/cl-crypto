@@ -120,12 +120,13 @@
 ;;; To get the first 2 OIDs out of the (X * 40)) + Y thing:
 ;;; subids are a string of 7-bit quantities!  So: #x8134 is:
 ;;;
-;;; (+ (ash (logand #x81 #x7F) 7) #x34) == 180 == #xB4 == 180.
+;;; (+ (ash (logand #x81 #x7F) 7) #x34) == #xB4 == 180.
 ;;;
 ;;; Then do (floor 180 40) => (4 20)
 ;;;
 ;;; Well, max for root value is 2, so we do this:
 ;;; First = 2, Second = (- 180 (* First 40))
+;;;
 ;;; Result: First = 2, Second = 100.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -180,14 +181,13 @@ data length, parse the data into a list of decoded integer values"
 	  (incf offset len)
 
 	  ;; Loop through the rest of the data
-	  (when (> total-size offset)
-	    (loop
-	       do
-		 (multiple-value-bind (value len)
-		     (decode-number tmp-array offset)
-		   (push value acc)
-		   (when (>= (incf offset len) total-size)
-		     (return nil)))))))
+	  (loop until (>= offset total-size)
+	     do
+	       (multiple-value-bind (value len)
+		   (decode-number tmp-array offset)
+		 (push value acc)
+		 (incf offset len)))))
+      
       (nreverse acc))))
 	       
 
@@ -218,10 +218,8 @@ data length, parse the data into a list of decoded integer values"
 		nil
 		"Invalid LENGTH value")
 
-	(loop
-	   do
-	     (when (zerop length-remaining) (return))
-	     
+	(loop until (zerop length-remaining)
+	   do 
 	     (multiple-value-bind (class p-or-c tag header-length content-length)
 		 (get-header stream)
 	       (dump-header class p-or-c tag header-length content-length)
@@ -229,6 +227,7 @@ data length, parse the data into a list of decoded integer values"
 	       (decf length-remaining header-length)
 	       
 	       (when (eq p-or-c :primitive)
+		 
 		 (case tag
 		   (:object-identifier
 		    (let ((oid (parse-object-identifier stream content-length)))
@@ -242,6 +241,7 @@ data length, parse the data into a list of decoded integer values"
 		   (t
 		    (dotimes (i content-length)
 		      (read-byte stream))))
+		 
 		 (decf length-remaining content-length))))
 		 
 	    
