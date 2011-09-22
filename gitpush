@@ -4,9 +4,11 @@
 #git remote add ok ok.acotilo.com:/home/lisp/git/cl-crypto.git
 
 # get the current branch, "git branch --contains" outputs "* branch"
-branch=`git branch --contains`
+branch=`git branch --contains | fgrep '*'`
 branch=${branch:2}
 
 echo "Pushing $branch"
 git push origin $branch
-git push ok $branch
+git push truledger $branch
+git push zippy $branch
+#git push ok $branch
