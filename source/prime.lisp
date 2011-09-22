@@ -22,7 +22,7 @@
 ;;                 (incf p 2)
 ;;                 (when (ldb b p) (return)))))))))
 
-(defun gen-prime (num-bits &key secret)
+(defun gen-prime (num-bits &key (secret nil) (safe nil))
   (princ "--P--")
   (with-random-byte-stream
     (flet ((foo ()
@@ -36,7 +36,12 @@
 	   (let ((step (small-prime-test p)))
 	     (when step (setq p (+ p step))
 		   (when (verify-prime p)
-		     (return-from gen-prime p)))))))))
+		     (if safe
+			 (progn
+			   (princ "--S--")
+			   (when (verify-prime (ash p -1))
+			     (return-from gen-prime p)))
+			 (return-from gen-prime p))))))))))
 	     
 
 (defmacro gen-secret-prime (num-bits)

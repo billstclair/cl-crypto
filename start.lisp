@@ -1,5 +1,4 @@
 (in-package :cl-user)
-
 (unless (find-package "QUICKLISP")
     (load "~/quicklisp/setup"))
 

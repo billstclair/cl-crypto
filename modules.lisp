@@ -10,6 +10,7 @@
 (require :asdf)
 (asdf:oos 'asdf:load-op 'cl-base64)
 (asdf:oos 'asdf:load-op 'flexi-streams)
+;;(asdf:oos 'asdf:load-op 'anaphora)
 
 (with-system-name (:cl-crypto)
 
