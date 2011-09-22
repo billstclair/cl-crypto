@@ -6,7 +6,18 @@
 
 
 (defparameter +linux-urandom-dev+ #P"/dev/urandom")
-(defvar *random-byte-stream* nil)
+(defvar *random-byte-stream*
+  #-windows nil
+  #+windows (make-random-stream))
+
+;; Call initialize-windows-crypto-library when
+;; a saved application starts.
+;; See ffi.lisp for *crypt-context* and advapi32 definitions.
+(defun initialize-windows-crypto-library ()
+  #+windows
+  (progn
+    (setf *crypt-context* nil)
+    (cffi:load-foreign-library 'advapi32)))
 
 (defmacro with-random-byte-stream (&body body)
   (let ((thunk (gensym)))
@@ -17,10 +28,12 @@
 (defun call-with-random-byte-stream (thunk)
   (if *random-byte-stream*
       (funcall thunk)
+      #-windows
       (with-open-file (*random-byte-stream*
                        +linux-urandom-dev+
                        :element-type '(unsigned-byte 8))
-        (funcall thunk))))
+        (funcall thunk))
+      #+windows (funcall thunk)))
 
 (defun get-random-bits (num-bits)
   (with-random-byte-stream ()

@@ -7,7 +7,10 @@
   :author "Mr. Bug <mrbug@rayservers.net>"
   :version "0.1"
   :license "Apache"
-  :depends-on (cl-base64 flexi-streams anaphora)
+  :depends-on (cl-base64 flexi-streams anaphora
+	       #+windows cffi
+	       #+windows bordeaux-threads
+	       #+windows trivial-gray-streams)
   :components
   ((:module source
     :serial t
@@ -16,6 +19,8 @@
      (:file "types")
      (:file "utility")
      (:file "math")
+     #+windows
+     (:file "ffi")
      (:file "random")
      (:file "small-primes")
      (:file "prime")

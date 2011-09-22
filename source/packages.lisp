@@ -33,7 +33,10 @@
    aes-string-encryption-test
    ;;utility.lisp
    hex-string-from-word-list
+   ;;ffi.lisp
+   #+windows make-random-stream
    ;;random.lisp
+   initialize-windows-crypto-library
    with-random-byte-stream
    random-integer
    random-string
