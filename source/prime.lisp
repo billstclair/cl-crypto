@@ -35,11 +35,11 @@
 	 (let ((p (foo)))
 	   (let ((step (small-prime-test p)))
 	     (when step (setq p (+ p step))
-		   (when (verify-prime p)
+		   (when (verify-prime p verbose-p)
 		     (if safe
 			 (progn
 			   (when verbose-p (princ "--S--"))
-			   (when (verify-prime (ash p -1))
+			   (when (verify-prime (ash p -1) verbose-p)
 			     (return-from gen-prime p)))
 			 (return-from gen-prime p))))))))))
 	     
