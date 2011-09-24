@@ -22,8 +22,8 @@
 ;;                 (incf p 2)
 ;;                 (when (ldb b p) (return)))))))))
 
-(defun gen-prime (num-bits &key (secret nil) (safe nil))
-  (princ "--P--")
+(defun gen-prime (num-bits &key (secret nil) (safe nil) verbose-p)
+  (when verbose-p (princ "--P--"))
   (with-random-byte-stream
     (flet ((foo ()
              (let ((result (logior #b1 (get-random-bits num-bits))))
@@ -38,7 +38,7 @@
 		   (when (verify-prime p)
 		     (if safe
 			 (progn
-			   (princ "--S--")
+			   (when verbose-p (princ "--S--"))
 			   (when (verify-prime (ash p -1))
 			     (return-from gen-prime p)))
 			 (return-from gen-prime p))))))))))
@@ -58,11 +58,11 @@
 	  t)
 	nil)))
 
-(defun verify-prime (p)
+(defun verify-prime (p &optional verbose-p)
   (and (oddp p)
 ;;       (small-prime-test-naive p)
        (fermat-little-test p)
-       (rabin-miller p 5)))
+       (rabin-miller p 5 verbose-p)))
 
 ;;
 ;; Uses trial division to check if any number in range 2 < x < (sqrt p)
@@ -77,8 +77,8 @@
       (when (zerop (mod p i))
 	(return-from prime-check-naive nil)))))
 
-(defun witness (a n)
-  (princ "W")
+(defun witness (a n &optional verbose-p)
+  (when verbose-p (princ "W"))
   (let ((n-minus-1 (1- n))
 	(d 1)
 	(x 0))
@@ -87,22 +87,21 @@
       (setq x d
 	    d (mod (square d) n))
       (when (and (= d 1) (not (= x 1)) (not (= x n-minus-1)))
-	(princ "--W-FAIL--")
+	(when verbose-p (princ "--W-FAIL--"))
 	(return-from witness t))
       (when (logbitp i n-minus-1)
 	(setq d (mod (* d a) n))))
     (if (not (= d 1))
 	(progn
-	  (princ "--WF--")
+	  (when verbose-p (princ "--WF--"))
 	  t)
 	nil)))
 	 
-  
-(defun rabin-miller (n k)
-  (princ "R")
+(defun rabin-miller (n k &optional verbose-p)
+  (when verbose-p (princ "R"))
   (let* ((n-minus-1 (1- n)))
     (dotimes (i k)
-      (when (witness (get-ranged-random-num 1 n-minus-1)  n)
+      (when (witness (get-ranged-random-num 1 n-minus-1) n verbose-p)
 	(return-from rabin-miller nil)))
     t))
 			     

@@ -1,7 +1,7 @@
 (in-package :common-lisp-user)
 
 (defpackage cl-crypto
-  (:use common-lisp)
+  (:use common-lisp anaphora)
   (:export
    ;; rsa.lisp
    ;; RSA interface

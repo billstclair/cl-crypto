@@ -1,7 +1,5 @@
 (in-package :cl-crypto)
 
-(use-package :anaphora)
-
 (defun pem-write (name data-string &key (stream *standard-output*))
   (format stream "-----BEGIN ~a-----~%~a~%-----END ~a-----~%"
 	  name data-string name))

@@ -25,7 +25,9 @@
 
 ;; From wincrypt.h
 (defconstant $PROV-RSA-FULL 1)
-(defconstant $CRYPT-VERIFYCONTEXT 0)
+(defconstant $CRYPT-VERIFYCONTEXT #xF0000000)
+(defconstant $MS-ENHANCED-PROV
+  "Microsoft Enhanced Cryptographic Provider v1.0")
 
 (defun crypt-acquire-default-context ()
   (cffi:with-foreign-object (phProv :pointer)

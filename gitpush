@@ -8,7 +8,7 @@ branch=`git branch --contains | fgrep '*'`
 branch=${branch:2}
 
 echo "Pushing $branch"
-git push origin $branch
-git push truledger $branch
-git push zippy $branch
+git push --tags origin $branch
+git push --tags truledger $branch
+git push --tags zippy $branch
 #git push ok $branch
