@@ -239,14 +239,14 @@
         (setf j 0)))
     (when (and (eql j 0)
                (> k 0)
-               (member (aref octets (1- k)) '(#x80 0)))
-      ;; May need an extra block to distinguish final byte of #x80 or 0
-      (unless (and (not (eql #x80 (aref octets (1- k))))
+               (member (aref octets (1- k)) '(#x40 0)))
+      ;; May need an extra block to distinguish final byte of #x40 or 0
+      (unless (and (not (eql #x40 (aref octets (1- k))))
                    (eql 0 (aref octets (1- k)))
                    (loop for i from (- k 2) downto (- k 16)
                       for o = (aref octets i)
                       do
-                        (when (eql o #x80) (return nil))
+                        (when (eql o #x40) (return nil))
                         (unless (eql o 0) (return t))
                       finally (return nil)))
         (incf total-bytes 16)
@@ -255,7 +255,7 @@
             (setf (aref new-res i) (aref res i)))
           (setf res new-res))))
     (unless (eql k total-bytes)
-      (let ((pad #x80))
+      (let ((pad #x40))
         (loop
            (when (eql j 16) (return))
            (setf (aref in j)
@@ -321,7 +321,7 @@
     (dotimes (j 16)
       (decf k)
       (let ((x (aref res k)))
-        (when (eql x #x80)
+        (when (eql x #x40)
           (setf size k)
           (return))
         (unless (eql x 0)
