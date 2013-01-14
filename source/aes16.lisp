@@ -85,6 +85,8 @@
 ;;; Macros
 ;;;
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+
 (defmacro array-rotate-uint-16-pairs-right (in)
   "Returns new array with right byte rotation
   across two adjacent uint-16 values"
@@ -116,7 +118,7 @@ inverse algorithm"
 	       (logior (ash (aref ,in (* 2 (aref +fsb+ i))) 16)
 		       (aref ,in (1+ (* 2 (aref +fsb+ i)))))))
        ,gout)))
-
+) ;; eval-when
 
 
 ;;;
