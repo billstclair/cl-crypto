@@ -13,18 +13,23 @@
 (in-package :cl-crypto)
 
 (defun make-preprocessor (words &key (blocks 0) byte-length)
-  (let ((pos 0) (len (length words))
-        (state :begin))
+  (let* ((pos 0)
+         (len (length words))
+         (bytes (* len 4))
+         (state :begin))
     (lambda (&aux (m (make-array 16
                                  :element-type 'uint-32
                                  :fill-pointer 0)))
       (unless (eq state :done)
         (dotimes (i (min 16 (- len pos)))
           (vector-push (aref words (+ pos i)) m))
-        (when (< (length m) 16)
+        (when (or (< (length m) 16)
+                  (and byte-length
+                       (>= (+ pos 16) len)
+                       (< byte-length bytes)))
           (when (eq state :begin)
             (let ((byte-pos
-                   (and byte-length (- (* len 4) byte-length)))
+                   (and byte-length (- bytes byte-length)))
                   (cur (1- (length m))))
               (if (and byte-pos (plusp byte-pos))
                   (setf (aref m cur)
